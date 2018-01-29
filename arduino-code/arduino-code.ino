@@ -1,3 +1,9 @@
+/*
+*  This is code receives and sends SMS using the SHIELD SIM 900.
+*  TO send SMS: first we need to receive the destination number, for exaple: #+54291124532$
+*  then we need to receive the text: #hello$
+*  and the sms is automatically send it.
+*/
 #include "SIM900.h"
 #include <SoftwareSerial.h>
 #include "sms.h"
@@ -8,7 +14,7 @@ boolean started=false;
 char smsbuffer[200];
 char receptionNumber[20];
 char destinationNumber[20];
-char text[200];
+char text[500];
 int NEW_TEXT = 0;
 int NEW_NUMBER = 0;
 char START_CHAR = '#';
@@ -114,7 +120,7 @@ Sends the sms with the text received from the serial to the number received.
 void sendSMS()
 {
   if (sms.SendSMS(destinationNumber,text)){
-    Serial.println("\nSMS sent OK");
+    Serial.println("\n#SMS OK$");
     NEW_TEXT = 0; //no new sms
     NEW_NUMBER = 0;
   }
@@ -125,10 +131,12 @@ void sendSMS()
 void loop() 
 {
   if(started){
-    if(gsm.readSMS(smsbuffer, 200, receptionNumber, 20))
+    if(gsm.readSMS(smsbuffer, 1000, receptionNumber, 20))
     {
-      Serial.println(receptionNumber);
-      Serial.println(smsbuffer);
+      String number =START_CHAR+receptionNumber+END_CHAR; 
+      Serial.println(number);
+      String texto = START_CHAR+smsbuffer+END_CHAR;
+      Serial.println(texto);
     }
     delay(1000);
     if(NEW_NUMBER == 0)
