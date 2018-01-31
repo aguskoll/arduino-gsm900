@@ -60,7 +60,6 @@ void readNumberFromSerial()
           {
                   FLAG_END = 1;
                   NEW_NUMBER = 1; //activate the flag to send a mew SMS
-                  Serial.println(destinationNumber);
           }
           else
           {
@@ -73,7 +72,6 @@ void readNumberFromSerial()
         FLAG_END = 1;
       }
   }
-  Serial.flush();
 }
 
 /**
@@ -102,7 +100,6 @@ void readTextForSMS()
             {
                   FLAG_END = 1;
                   NEW_TEXT = 1;
-                   Serial.println(sms_text);
             }
             else
             {
@@ -110,12 +107,7 @@ void readTextForSMS()
               pos++;
             }
       }
-      else
-      {
-        FLAG_END = 1;
-      }
   }
-  Serial.flush();
 }
 
 void cleanBuffer(){
