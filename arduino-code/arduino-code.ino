@@ -27,10 +27,10 @@ void setup()
   //Serial connection.
   Serial.begin(9600);
   if (gsm.begin(2400)){
-    Serial.println("#status=READY$");
+    Serial.println("%status=READY&");
     started=true;  
   }
-  else Serial.println("#status=IDLE$");
+  else Serial.println("%status=IDLE&");
 
 };
 
@@ -121,7 +121,7 @@ Sends the sms with the text received from the serial to the number received.
 void sendSMS()
 {
   if (sms.SendSMS(destinationNumber,sms_text)){
-    Serial.println("\n#SMS OK$");
+    Serial.println("\n%SMS OK&");
     NEW_TEXT = 0; //no new sms
     NEW_NUMBER = 0;
   }
@@ -133,16 +133,20 @@ void loop()
 {
   char position;
   if(started){
-    position = sms.IsSMSPresent(SMS_UNREAD);
-    if(position)
-      //if(gsm.readSMS(smsbuffer, 200, receptionNumber, 20))
-      {
-        sms.GetSMS(position, receptionNumber, sms_text, TEXT_SIZE);
-        String number =START_TEXT+receptionNumber+END_TEXT; 
-        Serial.println(number);
-        String texto = START_TEXT+sms_text+END_TEXT;
-        Serial.println(texto);
-      }
+   // position = sms.IsSMSPresent(SMS_UNREAD);
+    //if(position)
+    if(gsm.readSMS(sms_text, TEXT_SIZE, receptionNumber, 20))
+    {
+        //sms.GetSMS(position, receptionNumber, sms_text, TEXT_SIZE);
+        //String number =START_TEXT+receptionNumber+END_TEXT; 
+        Serial.print(START_NUMB);
+        Serial.print(receptionNumber);
+        Serial.println(END_NUMB);
+      //  String texto = START_TEXT+sms_text+END_TEXT;
+        Serial.print(START_TEXT);
+        Serial.print(sms_text);
+        Serial.println(END_TEXT);
+    }
     delay(1000);
     if(NEW_NUMBER == 0)
       readNumberFromSerial();
