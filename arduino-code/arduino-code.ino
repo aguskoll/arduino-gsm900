@@ -1,7 +1,7 @@
 /*
 *  This is code receives and sends SMS using the SHIELD SIM 900.
 *  TO send SMS: first we need to receive the destination number, for exaple: #+54291124532$
-*  then we need to receive the text: #hello$
+*  then we need to receive the text: %hello&
 *  and the sms is automatically send it.
 */
 #include "SIM900.h"
@@ -10,17 +10,16 @@
 SMSGSM sms;
 
 const int TEXT_SIZE = 160;
-int numdata;
 boolean started=false;
-char sms_text[TEXT_SIZE];
-char receptionNumber[20];
-char destinationNumber[20];
+char sms_text[160];
 int NEW_TEXT = 0;
 int NEW_NUMBER = 0;
 const char START_NUMB = '#';
 const char END_NUMB = '$';
 const char START_TEXT = '%';
 const char END_TEXT = '&';
+char numberToSend[20];
+char numberToReceive[20];
 
 void setup() 
 {
@@ -51,19 +50,20 @@ void readNumberFromSerial()
     if (Serial.available() > 0) 
     {
        data=Serial.read();
+       
        if(data == START_NUMB)//the beggining of the number
         { 
-          pos = 0;
+           pos = 0;
         }
         else 
           if(data == END_NUMB) //the end of the numer 
           {
-                  FLAG_END = 1;
-                  NEW_NUMBER = 1; //activate the flag to send a mew SMS
+               FLAG_END = 1;
+               NEW_NUMBER = 1; //activate the flag to send a mew SMS
           }
           else
           {
-            destinationNumber[pos] = data;
+            numberToSend[pos] = data;
             pos++;
           }
       }
@@ -112,7 +112,7 @@ void readTextForSMS()
 
 void cleanBuffer(){
   int i;
-  for(i = 0; i <TEXT_SIZE;i++ )
+  for(i = 0; i <160;i++ )
     sms_text[i] = ' ';   
 }
 /**
@@ -120,12 +120,16 @@ Sends the sms with the text received from the serial to the number received.
 */
 void sendSMS()
 {
-  if (sms.SendSMS(destinationNumber,sms_text)){
-    Serial.println("\n%SMS OK&");
+  Serial.print("numero ");
+  Serial.println(numberToSend);
+  Serial.print(" a ese fue ");
+  
+  if (sms.SendSMS(numberToSend,sms_text))
+  {
+    Serial.println("%SMS OK&");
     NEW_TEXT = 0; //no new sms
     NEW_NUMBER = 0;
   }
-
 
 }
 
@@ -133,24 +137,22 @@ void loop()
 {
   char position;
   if(started){
-   // position = sms.IsSMSPresent(SMS_UNREAD);
-    //if(position)
-    if(gsm.readSMS(sms_text, TEXT_SIZE, receptionNumber, 20))
+     position = sms.IsSMSPresent(SMS_UNREAD);
+   // if(gsm.readSMS(sms_text, TEXT_SIZE, numberToReceive, 20))
+    if(position)
     {
-        //sms.GetSMS(position, receptionNumber, sms_text, TEXT_SIZE);
-        //String number =START_TEXT+receptionNumber+END_TEXT; 
+        sms.GetSMS(position, numberToReceive, sms_text, TEXT_SIZE);
         Serial.print(START_NUMB);
-        Serial.print(receptionNumber);
+        Serial.print(numberToReceive);
         Serial.println(END_NUMB);
-      //  String texto = START_TEXT+sms_text+END_TEXT;
         Serial.print(START_TEXT);
         Serial.print(sms_text);
         Serial.println(END_TEXT);
     }
     delay(1000);
-    if(NEW_NUMBER == 0)
+    if(NEW_NUMBER == 0 and NEW_TEXT == 0)
       readNumberFromSerial();
-    if(NEW_TEXT == 0 && NEW_NUMBER == 1)
+    if(NEW_TEXT == 0 and NEW_NUMBER == 1)
       readTextForSMS();
     if(NEW_TEXT == 1 and NEW_NUMBER == 1)
     {
