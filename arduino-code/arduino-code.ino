@@ -1,7 +1,7 @@
 /*
 *  This is code receives and sends SMS using the SHIELD SIM 900.
 *  TO send SMS: first we need to receive the destination number, for exaple: #+54291124532$
-*  then we need to receive the text: %hello&
+*  then we need to receive the text:  #+542914317459$%hello&
 *  and the sms is automatically send it.
 */
 #include "SIM900.h"
@@ -9,9 +9,9 @@
 #include "sms.h"
 SMSGSM sms;
 
-const int TEXT_SIZE = 160;
+const int TEXT_SIZE = 130;
 boolean started=false;
-char sms_text[160];
+char sms_text[TEXT_SIZE];
 int NEW_TEXT = 0;
 int NEW_NUMBER = 0;
 const char START_NUMB = '#';
@@ -19,7 +19,7 @@ const char END_NUMB = '$';
 const char START_TEXT = '%';
 const char END_TEXT = '&';
 char numberToSend[20];
-char numberToReceive[20];
+
 
 void setup() 
 {
@@ -60,6 +60,8 @@ void readNumberFromSerial()
           {
                FLAG_END = 1;
                NEW_NUMBER = 1; //activate the flag to send a mew SMS
+               Serial.println("fin lectura numero");
+               Serial.println(numberToSend);
           }
           else
           {
@@ -100,6 +102,8 @@ void readTextForSMS()
             {
                   FLAG_END = 1;
                   NEW_TEXT = 1;
+                  Serial.println("fin lectura texto");
+                  Serial.println(sms_text);
             }
             else
             {
@@ -112,18 +116,18 @@ void readTextForSMS()
 
 void cleanBuffer(){
   int i;
-  for(i = 0; i <160;i++ )
+  for(i = 0; i<TEXT_SIZE;i++ )
     sms_text[i] = ' ';   
 }
 /**
 Sends the sms with the text received from the serial to the number received.
 */
 void sendSMS()
-{
-  Serial.print("numero ");
+{ 
+  Serial.println("numero");
   Serial.println(numberToSend);
-  Serial.print(" a ese fue ");
-  
+  Serial.println("Txto");
+   Serial.println(sms_text);
   if (sms.SendSMS(numberToSend,sms_text))
   {
     Serial.println("%SMS OK&");
@@ -132,23 +136,32 @@ void sendSMS()
   }
 
 }
-
-void loop() 
-{
-  char position;
-  if(started){
-     position = sms.IsSMSPresent(SMS_UNREAD);
-   // if(gsm.readSMS(sms_text, TEXT_SIZE, numberToReceive, 20))
+/**
+* Check if there are new SMS. 
+* if there is one,  then we read the sms, then we print via serial and we delete it.
+*/
+void checkSMS(){
+   char text[TEXT_SIZE]; 
+   char position;
+   char numberToReceive[20];
+   position = sms.IsSMSPresent(SMS_UNREAD);
     if(position)
     {
-        sms.GetSMS(position, numberToReceive, sms_text, TEXT_SIZE);
+        sms.GetSMS(position, numberToReceive, text, TEXT_SIZE);
         Serial.print(START_NUMB);
         Serial.print(numberToReceive);
         Serial.println(END_NUMB);
         Serial.print(START_TEXT);
-        Serial.print(sms_text);
+        Serial.print(text);
         Serial.println(END_TEXT);
-    }
+        sms.DeleteSMS(position);
+    } 
+}
+
+void loop() 
+{
+ if(started){
+    checkSMS(); 
     delay(1000);
     if(NEW_NUMBER == 0 and NEW_TEXT == 0)
       readNumberFromSerial();
@@ -160,3 +173,4 @@ void loop()
     }
   }
 };
+
