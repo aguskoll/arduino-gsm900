@@ -60,8 +60,6 @@ void readNumberFromSerial()
           {
                FLAG_END = 1;
                NEW_NUMBER = 1; //activate the flag to send a mew SMS
-               Serial.println("fin lectura numero");
-               Serial.println(numberToSend);
           }
           else
           {
@@ -102,8 +100,6 @@ void readTextForSMS()
             {
                   FLAG_END = 1;
                   NEW_TEXT = 1;
-                  Serial.println("fin lectura texto");
-                  Serial.println(sms_text);
             }
             else
             {
@@ -124,10 +120,10 @@ Sends the sms with the text received from the serial to the number received.
 */
 void sendSMS()
 { 
-  Serial.println("numero");
+  /*Serial.println("numero");
   Serial.println(numberToSend);
   Serial.println("Txto");
-   Serial.println(sms_text);
+   Serial.println(sms_text);*/
   if (sms.SendSMS(numberToSend,sms_text))
   {
     Serial.println("%SMS OK&");
