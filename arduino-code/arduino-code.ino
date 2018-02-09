@@ -9,7 +9,7 @@
 #include "sms.h"
 SMSGSM sms;
 
-const int TEXT_SIZE = 130;
+const int TEXT_SIZE = 150;
 boolean started=false;
 char sms_text[TEXT_SIZE];
 int NEW_TEXT = 0;
@@ -18,8 +18,8 @@ const char START_NUMB = '#';
 const char END_NUMB = '$';
 const char START_TEXT = '%';
 const char END_TEXT = '&';
-char numberToSend[20];
-
+const int NUMB_SIZE = 20;
+char numberToSend[NUMB_SIZE];
 
 void setup() 
 {
@@ -44,7 +44,8 @@ void readNumberFromSerial()
 {
   int FLAG_END = 0;
   char data;
-  int pos = 0;
+  int jPos = 0;
+ 
   while(FLAG_END == 0)
   {
     if (Serial.available() > 0) 
@@ -53,18 +54,28 @@ void readNumberFromSerial()
        
        if(data == START_NUMB)//the beggining of the number
         { 
-           pos = 0;
+           jPos = 0;
         }
         else 
           if(data == END_NUMB) //the end of the numer 
           {
                FLAG_END = 1;
                NEW_NUMBER = 1; //activate the flag to send a mew SMS
+               Serial.flush();
+               return numberToSend;
           }
           else
           {
-            numberToSend[pos] = data;
-            pos++;
+            if(jPos<NUMB_SIZE){
+              numberToSend[jPos] = data;
+              jPos++;
+            }
+            else 
+            {
+               FLAG_END = 1;
+               NEW_NUMBER = 1; //activate the flag to send a mew SMS
+               Serial.flush();
+            }
           }
       }
       else
@@ -81,9 +92,9 @@ void readNumberFromSerial()
 */
 void readTextForSMS()
 {
-   int FLAG_END = 0;
-   char data;
-   int pos;
+  int FLAG_END = 0;
+  char data;
+  int pos;
   while(FLAG_END == 0)
   {
     if (Serial.available() > 0) 
@@ -93,44 +104,36 @@ void readTextForSMS()
        if(data == START_TEXT)//the beggining of the text
         { 
           pos = 0; 
-          cleanBuffer();
         }
         else 
             if(data == END_TEXT) //the end of the text 
             {
                   FLAG_END = 1;
                   NEW_TEXT = 1;
+                  Serial.flush();
             }
             else
             {
-              sms_text[pos] = data;
-              pos++;
+              if(pos<TEXT_SIZE){
+                sms_text[pos] = data;
+                pos++;
+              }
             }
       }
   }
 }
 
-void cleanBuffer(){
-  int i;
-  for(i = 0; i<TEXT_SIZE;i++ )
-    sms_text[i] = ' ';   
-}
 /**
 Sends the sms with the text received from the serial to the number received.
 */
-void sendSMS()
+void sendSMS(char *number_str, char *message_str)
 { 
-  /*Serial.println("numero");
-  Serial.println(numberToSend);
-  Serial.println("Txto");
-   Serial.println(sms_text);*/
-  if (sms.SendSMS(numberToSend,sms_text))
+  if (sms.SendSMS(number_str,message_str))
   {
     Serial.println("%SMS OK&");
     NEW_TEXT = 0; //no new sms
     NEW_NUMBER = 0;
   }
-
 }
 /**
 * Check if there are new SMS. 
@@ -139,7 +142,7 @@ void sendSMS()
 void checkSMS(){
    char text[TEXT_SIZE]; 
    char position;
-   char numberToReceive[20];
+   char numberToReceive[NUMB_SIZE];
    position = sms.IsSMSPresent(SMS_UNREAD);
     if(position)
     {
@@ -156,16 +159,20 @@ void checkSMS(){
 
 void loop() 
 {
+ 
  if(started){
     checkSMS(); 
     delay(1000);
-    if(NEW_NUMBER == 0 and NEW_TEXT == 0)
+    if(NEW_NUMBER == 0 and NEW_TEXT == 0){
       readNumberFromSerial();
+    }
     if(NEW_TEXT == 0 and NEW_NUMBER == 1)
+    {
       readTextForSMS();
+    }
     if(NEW_TEXT == 1 and NEW_NUMBER == 1)
     {
-      sendSMS();
+      sendSMS(numberToSend,sms_text);
     }
   }
 };
