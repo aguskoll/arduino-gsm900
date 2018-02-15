@@ -1,7 +1,7 @@
 /*
 *  This is code receives and sends SMS using the SHIELD SIM 900.
 *  TO send SMS: first we need to receive the destination number, for exaple: #+54291124532$
-*  then we need to receive the text:  #+542914317459$%hello&
+*  then we need to receive the text:  #+542914317447$%hello&
 *  and the sms is automatically send it.
 */
 #include "SIM900.h"
